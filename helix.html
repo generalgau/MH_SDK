@@ -1,0 +1,87 @@
+<html>
+    <head>
+        <script type="text/javascript" src="scripts/jquery-2.0.2.js"></script>
+        <script type="text/javascript" src="scripts/helix-mobile-full.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="styles/helix-mobile-full.css">
+    </head>
+    <body>
+	    <div id="main"></div>
+
+        <script type="text/javascript">
+		function fetch() {
+			var record;
+			Helix.DB.synchronizeObjectByKey("Pizza man", Helix.DB.getSchemaForTable("Folder"), function (obj) {
+				record = obj["_data"];
+				$('#main').append(JSON.stringify(record));
+			});
+		}
+
+		function store() {
+			var d = {
+				"name": "Pizza man",
+					"owner": "Seth Hallem",
+					"lastSynchronized": "20130529T11:24:00",
+					"messageCount": 100,
+					"messages": {
+					"messageID": "D46563E61A1949F889DA4846D4748504",
+						"receiveDate": 1369099797000,
+						"senderEmail": "support@mobilehelix.com",
+						"senderSubject": "Followup to your inquiry",
+						"htmlBody": "<div>Dear Mr. Smith,<p>Thank you ...</p></div>"
+				}
+			};
+			Helix.DB.synchronizeObject(d,
+			Helix.DB.getSchemaForTable("Folder"),
+
+			function () {
+				//alert("whatever");
+				fetch();
+			},
+			null, null, null);
+		}
+		var schema = null;
+		alert("ni hao");
+
+		initHelixDB();
+		definePersistenceMigrations();
+		Helix.DB.initPersistence();
+		//generatePersistenceSchemaFromDB("tableName",schema1,oncomplete,nRetries);
+
+		$(document).on('hxPersistenceReady', function () {
+			var message = {
+				messageID: '',
+				senderEmail: '',
+				receiveDate: 1,
+				senderSubject: '',
+				htmlBody: ''
+			};
+			var schema1 = Helix.DB.prepareSchemaTemplate(message, "Message", "messageID", {
+				'receiveDate': 'Receive Date',
+					'senderEmail': 'Sender Email'
+			}, {
+
+			});
+			console.log(schema1);
+
+			var s = {
+				name: '',
+				owner: '',
+				lastSynchronized: '',
+				messageCount: 0,
+				messages: schema1
+			};
+
+			var schema2 = Helix.DB.prepareSchemaTemplate(s, "Folder", "name", {}, {});
+			console.log(schema2);
+			schema = schema2;
+			Helix.DB.generatePersistenceSchema(schema2, "PizzaEmails", function () {
+				persistence.dump(function (dump) {
+					store();
+					console.log(dump);
+				});
+			});
+		});
+        </script>
+    </body>
+</html> 

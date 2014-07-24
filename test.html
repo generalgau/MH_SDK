@@ -1,0 +1,158 @@
+<html>
+    <head>
+        <script type="text/javascript" src="scripts/jquery-2.0.2.js"></script>
+        <script type="text/javascript" src="scripts/helix-mobile-full.js"></script>
+        <link rel="stylesheet" type="text/css" href="styles/helix-mobile-full.css">
+    </head>
+    <body>
+		<div id="main"><br></div>
+        <script type="text/javascript">
+		var d = null
+			function fetch() {
+				var record;
+				Helix.DB.synchronizeObjectByKey(document.getElementById("namebox").value, Helix.DB.getSchemaForTable("Folder"), function (obj) {
+					record = obj["_data"];
+					$('#main').html(JSON.stringify(record));
+				});
+			}
+			/*function fetch() {
+				var record;
+				Helix.DB.synchronizeObject(d, Helix.DB.getSchemaForTable("Folder"), function (obj) {
+					record = obj["_data_obj"]["messages"]["__hx_key"];
+					$('#main').html(JSON.stringify(record));
+				}, null, null, null);
+			}
+				Helix.DB.synchronizeObject(d,
+				Helix.DB.getSchemaForTable("Folder"),
+				function () {
+					alert("Successfully stored!");
+					//fetch();
+				},
+				null, null, null);*/
+			function store(update) {
+			if (!update) {
+				d = {
+					"name": document.getElementById("namebox").value,
+						"owner": document.getElementById("ownerbox").value,
+						"lastSynchronized": document.getElementById("syncbox").value,
+						"messageCount": document.getElementById("countbox").value,
+						"messages": {
+						//"__hx_type" : 1001,
+							"messageID": document.getElementById("idbox").value,
+							"receiveDate": document.getElementById("datebox").value,
+							"senderEmail": document.getElementById("emailbox").value,
+							"senderSubject": document.getElementById("subjectbox").value,
+							"htmlBody": document.getElementById("bodybox").value
+						}
+				};
+			}	
+			else {	d = {
+					"name": document.getElementById("namebox").value,
+						"owner": document.getElementById("ownerbox").value,
+						"lastSynchronized": document.getElementById("syncbox").value,
+						"messageCount": document.getElementById("countbox").value,
+						"messages": {
+						"__hx_type" : 1001,
+						"messageID": document.getElementById("idbox").value,
+							"receiveDate": document.getElementById("datebox").value,
+							"senderEmail": document.getElementById("emailbox").value,
+							"senderSubject": document.getElementById("subjectbox").value,
+							"htmlBody": document.getElementById("bodybox").value
+					}	}
+				};
+				Helix.DB.synchronizeObject(d,
+				Helix.DB.getSchemaForTable("Folder"),
+				function () {
+					alert("Successfully stored!");
+					//fetch();
+				},
+				null, null, null);
+			}
+			var kf = null
+			function findkeyfield() {
+				Helix.DB.generatePersistenceSchema(schema2, "PizzaEmails", function () {
+					persistence.dump(function (dump) {
+						//store();
+						Helix.DB.synchronizeObject(d, Helix.DB.getSchemaForTable("Folder"), function (obj) {
+							kf = document.getElementById("criterion").value;
+							var z=0
+							for (var i=0; i < dump.Message.length; i++) {
+								if (document.getElementById("searchbox").value == dump.Message[i][kf]) {
+									z++
+								}
+								if (document.getElementById("searchbox").value == dump.Message[i][kf]) {
+									alert(JSON.stringify(dump.Message[i]));
+								}
+								/*else {
+									alert("No matching entry in database" + " number " + i);
+								}*/
+							}
+							alert(z + " result(s) found for query " + kf)
+						}, null, null, null);
+					});
+				});
+
+			}
+			var schema = null;
+			initHelixDB();
+			definePersistenceMigrations();
+			Helix.DB.initPersistence();
+			//generatePersistenceSchemaFromDB("tableName",schema1,oncomplete,nRetries);
+
+			var schema2
+			$(document).on('hxPersistenceReady', function () {
+				var message = {
+					messageID: '',
+					senderEmail: '',
+					receiveDate: 1,
+					senderSubject: '',
+					htmlBody: ''
+				};
+				var schema1 = Helix.DB.prepareSchemaTemplate(message, "Message", "messageID", {
+					'receiveDate': 'Receive Date',
+					'senderEmail': 'Sender Email'},"","","");
+				console.log(schema1);
+
+				var s = {
+					name: '',
+					owner: '',
+					lastSynchronized: '',
+					messageCount: 0,
+					messages: schema1
+				};
+
+				schema2 = Helix.DB.prepareSchemaTemplate(s, "Folder", "name", {}, {});
+				console.log(schema2);
+				schema = schema2;
+				Helix.DB.generatePersistenceSchema(schema2, "PizzaEmails", function () {
+					persistence.dump(function (dump) {
+						//store();
+						console.log(dump);
+					});
+				});
+			});
+        </script>
+		<form name="banana" action="" method="get">
+			<input type="button" name="stojhire" value="STORE" onclick="store()"/>
+			<!--<input type="button" name="uipdate" value="UPDATE" onclick="store(1)"/>-->
+			<input type="button" name="retreeve" value="RETRIEVE" onclick="fetch()"/>
+			<input type="button" name="searcsfdh" value="SEARCH" onclick="findkeyfield()"/>
+			Search Criteria: <select id="criterion">
+				<option value = "messageID">MessageID
+				<option value = "receiveDate">Date Received
+				<option value = "senderEmail">Email Address
+				<option value = "name">Name
+			</select>
+			Search: <input type="text" name="search" id="searchbox" value="query"><br>
+			Name: <input type="text" name="name" id="namebox" value="durian"><br>
+			Owner: <input type="text" name="owner" id="ownerbox" value="pomegranate"><br>
+			Last Synchronized: <input type="text" name="lastSynchronized" id="syncbox" value="pineapple"> <br>
+			Message Count: <input type="text" name="messageCount" id="countbox" value="dragonfruit"><br>
+			Message ID: <input type="text" name="messageID" id="idbox" value="papaya"><br>
+			Date Received: <input type="text" name="receiveDate" id="datebox" value="passionfruit"><br>
+			Email Address: <input type="text" name="senderEmail" id="emailbox" value="lychee"><br>
+			Subject: <input type="text" name="senderSubject" id="subjectbox" value="starfruit"><br>
+			Body: <input type="text" name="htmlbody" id="bodybox" value="grapefruit">
+		</form>
+    </body>
+</html> 

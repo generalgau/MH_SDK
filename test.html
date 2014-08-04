@@ -10,121 +10,113 @@
 		var d = null
 			function fetch() {
 				var record;
-				Helix.DB.synchronizeObjectByKey(document.getElementById("namebox").value, Helix.DB.getSchemaForTable("Folder"), function (obj) {
+				Helix.DB.synchronizeObjectByKey(document.getElementById("keyfieldbox").value, Helix.DB.getSchemaForTable("tableNamee"), function (obj) {
 					record = obj["_data"];
 					$('#main').html(JSON.stringify(record));
 				});
 			}
-			/*function fetch() {
-				var record;
-				Helix.DB.synchronizeObject(d, Helix.DB.getSchemaForTable("Folder"), function (obj) {
-					record = obj["_data_obj"]["messages"]["__hx_key"];
-					$('#main').html(JSON.stringify(record));
-				}, null, null, null);
-			}
-				Helix.DB.synchronizeObject(d,
-				Helix.DB.getSchemaForTable("Folder"),
-				function () {
-					alert("Successfully stored!");
-					//fetch();
-				},
-				null, null, null);*/
 			function store(update) {
-			if (!update) {
-				d = {
-					"name": document.getElementById("namebox").value,
-						"owner": document.getElementById("ownerbox").value,
-						"lastSynchronized": document.getElementById("syncbox").value,
-						"messageCount": document.getElementById("countbox").value,
-						"messages": {
-						//"__hx_type" : 1001,
-							"messageID": document.getElementById("idbox").value,
-							"receiveDate": document.getElementById("datebox").value,
-							"senderEmail": document.getElementById("emailbox").value,
-							"senderSubject": document.getElementById("subjectbox").value,
-							"htmlBody": document.getElementById("bodybox").value
-						}
-				};
-			}	
-			else {	d = {
-					"name": document.getElementById("namebox").value,
-						"owner": document.getElementById("ownerbox").value,
-						"lastSynchronized": document.getElementById("syncbox").value,
-						"messageCount": document.getElementById("countbox").value,
-						"messages": {
-						"__hx_type" : 1001,
-						"messageID": document.getElementById("idbox").value,
-							"receiveDate": document.getElementById("datebox").value,
-							"senderEmail": document.getElementById("emailbox").value,
-							"senderSubject": document.getElementById("subjectbox").value,
-							"htmlBody": document.getElementById("bodybox").value
-					}	}
-				};
+				if (!update) {
+					d = //THIS WILL OVERWRITE IF SAME KEYFIELD EXISTS (PSEUDO-DELTA)
+						'keyField': document.getElementById("keyfieldbox").value,
+						'firstName': document.getElementById("first").value,
+						'lastName': document.getElementById("last").value
+					};
+				} //store
+				else {//THIS DOES NOT WORK
+					Helix.DB.generatePersistenceSchema({
+					__hx_schema_name: 'mySchema',
+					__hx_key : 'firstName',
+					firstName : ''},
+					'TestSchemaGen', function() {// Schema is ready. Now add to it.
+						d = {"__hx_type" : 1001,
+							"adds":{},
+							"updates":[{
+							'firstName': document.getElementById("addn").value
+							}],
+							"deletes":{}
+						};
+						alert(JSON.stringify(d));
+					})
+				}
 				Helix.DB.synchronizeObject(d,
-				Helix.DB.getSchemaForTable("Folder"),
+				Helix.DB.getSchemaForTable("tableNamee"),
 				function () {
 					alert("Successfully stored!");
-					//fetch();
 				},
 				null, null, null);
-			}
+			};
+					/*d = {
+						"keyField": document.getElementById("keyfieldbox").value,
+						"__hx_type" : 1001,
+						"adds":{},
+						"updates":{
+						'firstName': document.getElementById("addn").value
+						},
+						"deletes":{}
+					};
+					alert(JSON.stringify(d));
+				}
+				Helix.DB.synchronizeObject(d,
+				Helix.DB.getSchemaForTable("tableNamee"),
+				function () {
+					alert("Successfully stored!");
+				},
+				null, null, null);
+			}*/
 			var kf = null
 			function findkeyfield() {
-				Helix.DB.generatePersistenceSchema(schema2, "PizzaEmails", function () {
+				Helix.DB.generatePersistenceSchema(schemaa, "INF0", function () {
 					persistence.dump(function (dump) {
-						//store();
-						Helix.DB.synchronizeObject(d, Helix.DB.getSchemaForTable("Folder"), function (obj) {
+						Helix.DB.synchronizeObject(d, Helix.DB.getSchemaForTable("tableNamee"), function (obj) {
 							kf = document.getElementById("criterion").value;
 							var z=0
-							for (var i=0; i < dump.Message.length; i++) {
-								if (document.getElementById("searchbox").value == dump.Message[i][kf]) {
+							for (var i=0; i < dump.tableNamee.length; i++) {
+								if (document.getElementById("searchbox").value == dump.tableNamee[i][kf]) {
 									z++
 								}
-								if (document.getElementById("searchbox").value == dump.Message[i][kf]) {
-									alert(JSON.stringify(dump.Message[i]));
+								if (document.getElementById("searchbox").value == dump.tableNamee[i][kf]) {
+									alert(JSON.stringify(dump.tableNamee[i]));
 								}
 								/*else {
 									alert("No matching entry in database" + " number " + i);
 								}*/
 							}
-							alert(z + " result(s) found for query " + kf)
+							alert(z + " result(s) found for the " + kf + ": \"" + document.getElementById("searchbox").value + "\"" + " out of " + i + " entries in the database ")
 						}, null, null, null);
 					});
 				});
-
-			}
+			} //search
 			var schema = null;
 			initHelixDB();
 			definePersistenceMigrations();
 			Helix.DB.initPersistence();
 			//generatePersistenceSchemaFromDB("tableName",schema1,oncomplete,nRetries);
 
-			var schema2
+			var schemaa
 			$(document).on('hxPersistenceReady', function () {
-				var message = {
+				/*var message = {
 					messageID: '',
 					senderEmail: '',
 					receiveDate: 1,
 					senderSubject: '',
 					htmlBody: ''
 				};
-				var schema1 = Helix.DB.prepareSchemaTemplate(message, "Message", "messageID", {
+				var schema1 = Helix.DB.prepareSchemaTemplate(message, "tableNamee", "messageID", {
 					'receiveDate': 'Receive Date',
 					'senderEmail': 'Sender Email'},"","","");
-				console.log(schema1);
+				console.log(schema1);*/
 
 				var s = {
-					name: '',
-					owner: '',
-					lastSynchronized: '',
-					messageCount: 0,
-					messages: schema1
+					keyField : '',
+					firstName : '',
+					lastName : ''
 				};
 
-				schema2 = Helix.DB.prepareSchemaTemplate(s, "Folder", "name", {}, {});
-				console.log(schema2);
-				schema = schema2;
-				Helix.DB.generatePersistenceSchema(schema2, "PizzaEmails", function () {
+				schemaa = Helix.DB.prepareSchemaTemplate(s, "tableNamee", "keyField", {}, {});
+				console.log(schemaa);
+				//schema = schema2;
+				Helix.DB.generatePersistenceSchema(schemaa, "INF0", function () {
 					persistence.dump(function (dump) {
 						//store();
 						console.log(dump);
@@ -134,25 +126,19 @@
         </script>
 		<form name="banana" action="" method="get">
 			<input type="button" name="stojhire" value="STORE" onclick="store()"/>
-			<!--<input type="button" name="uipdate" value="UPDATE" onclick="store(1)"/>-->
+			<input type="button" name="uipdate" value="UPDATE" onclick="store(1)"/>
 			<input type="button" name="retreeve" value="RETRIEVE" onclick="fetch()"/>
 			<input type="button" name="searcsfdh" value="SEARCH" onclick="findkeyfield()"/>
 			Search Criteria: <select id="criterion">
-				<option value = "messageID">MessageID
-				<option value = "receiveDate">Date Received
-				<option value = "senderEmail">Email Address
-				<option value = "name">Name
+				<option value = "keyField">Key Field
+				<option value = "firstName">First Name
+				<option value = "lastName">Last Name
 			</select>
 			Search: <input type="text" name="search" id="searchbox" value="query"><br>
-			Name: <input type="text" name="name" id="namebox" value="durian"><br>
-			Owner: <input type="text" name="owner" id="ownerbox" value="pomegranate"><br>
-			Last Synchronized: <input type="text" name="lastSynchronized" id="syncbox" value="pineapple"> <br>
-			Message Count: <input type="text" name="messageCount" id="countbox" value="dragonfruit"><br>
-			Message ID: <input type="text" name="messageID" id="idbox" value="papaya"><br>
-			Date Received: <input type="text" name="receiveDate" id="datebox" value="passionfruit"><br>
-			Email Address: <input type="text" name="senderEmail" id="emailbox" value="lychee"><br>
-			Subject: <input type="text" name="senderSubject" id="subjectbox" value="starfruit"><br>
-			Body: <input type="text" name="htmlbody" id="bodybox" value="grapefruit">
+			Key Field: <input type="text" name="keyfield" id="keyfieldbox" value="durian"><br>
+			First Name: <input type="text" name="firstn" id="first" value="pomegranate"><br>
+			Last Name: <input type="text" name="lastn" id="last" value="pineapple"> <br>
+			Add Name: <input type="text" name="addd" id="addn" value="lychee"> <br>
 		</form>
     </body>
 </html> 

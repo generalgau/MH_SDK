@@ -10,26 +10,41 @@
 		initHelixDB();
 		definePersistenceMigrations();
 		Helix.DB.initPersistence();
-		var schemaa
+		
 		$(document).on('hxPersistenceReady', function () {
 				var s = {
-				'messageID':'',
-				'To':'',
-				'From':'',
-				'Time':'',
-				'Message': ''
+				messageID:'',
+				To:'',
+				From:'',
+				Time:'',
+				Message: ''
 				};
-				schemaa = Helix.DB.prepareSchemaTemplate(s, "messageTable", "messageID", {}, {});
+				
+				var schemaa = Helix.DB.prepareSchemaTemplate(s, "messageTable", "messageID");
 				console.log(schemaa);
-				Helix.DB.generatePersistenceSchema(schemaa, "INF0", function () {
+				
+				var thread = {
+				threadCount:1,
+				messages: schemaa
+				};
+				
+				var threadTable = Helix.DB.prepareSchemaTemplate(thread, "threadTable", "threadCount");
+				console.log(threadTable);
+				Helix.DB.generatePersistenceSchema(threadTable, "threadSchema", function () {
 					persistence.dump(function (dump) {
 						console.log(dump);
 					});
 				});
+				
+				Helix.DB.synchronizeObject(thread,Helix.DB.getSchemaForTable("threadTable"),function() {
+					console.log(thread);
+					},null,null,null
+				);
 			});
+			
 		var m
 		function send() {
-			var m = {
+			m = {
 				'messageID':document.getElementById('IDbox').value,
 				'To':'',
 				'From':'',
@@ -42,7 +57,7 @@
 				//alert(JSON.stringify(m));
 			},
 			null, null, null);
-			print()
+			print();
 		}
 		function print() {
 		var record;
@@ -51,12 +66,40 @@
 				$('#chat').append(JSON.stringify(record) + "<br />");
 			});
 		}
+		function delta() {
+			Helix.DB.generatePersistenceSchema({
+			__hx_schema_name: 'threadTable',
+			__hx_key : 'threadCount',
+			Message : ''},
+			'TestSchemaGen', function() {// Schema is ready. Now add to it.
+				m = {
+					"adds":[{
+					'Message':document.getElementById('deltabox').value
+					}],
+					"updates":{},
+					"deletes":{}
+				};
+				alert(JSON.stringify(m));
+				
+				Helix.DB.synchronizeDeltaObject(
+					m,
+					Helix.DB.getSchemaForTable("threadTable"),
+					function () {
+						//alert(JSON.stringify(m));
+					},
+					null, null, null
+				);
+				print();
+			})
+		}
         </script>
 		<form name="banana" action="" method="get">
 			<input type="button" name="sendd" value="SEND" onclick="send()"/>
+			<input type="button" name="deltaa" value="DELTA" onclick="delta();"/>
 			<input type='button' name='printt' value='PRINT' onclick='print()'/><br>
-			<input type="text" name="compose" id="composebox" value="Send a message...">
-			<input type="text" name="messageID" id="IDbox" value="1">
+			<input type="text" name="composee" id="composebox" value="Send a message...">
+			<input type="text" name="deltaaa" id="deltabox" value="New message"/>
+			<input type="text" name="messageIDD" id="IDbox" value="1">
 		</form>
     </body>
 </html> 

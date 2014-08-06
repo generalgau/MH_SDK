@@ -101,7 +101,6 @@
 			Helix.DB.initPersistence();
 			//generatePersistenceSchemaFromDB("tableName",schema1,oncomplete,nRetries);
 
-			var schema2
 			$(document).on('hxPersistenceReady', function () {
 				var message = {
 					messageID: '',
@@ -123,7 +122,7 @@
 					messages: schema1
 				};
 
-				schema2 = Helix.DB.prepareSchemaTemplate(s, "Folder", "name", {}, {});
+				var schema2 = Helix.DB.prepareSchemaTemplate(s, "Folder", "name", {}, {});
 				console.log(schema2);
 				schema = schema2;
 				Helix.DB.generatePersistenceSchema(schema2, "PizzaEmails", function () {

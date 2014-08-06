@@ -17,13 +17,13 @@
 			}
 			function store(update) {
 				if (!update) {
-					d = //THIS WILL OVERWRITE IF SAME KEYFIELD EXISTS (PSEUDO-DELTA)
+					d = {
 						'keyField': document.getElementById("keyfieldbox").value,
 						'firstName': document.getElementById("first").value,
 						'lastName': document.getElementById("last").value
-					};
-				} //store
-				else {//THIS DOES NOT WORK
+						};
+				}
+				else {
 					Helix.DB.generatePersistenceSchema({
 					__hx_schema_name: 'mySchema',
 					__hx_key : 'firstName',
@@ -32,7 +32,8 @@
 						d = {"__hx_type" : 1001,
 							"adds":{},
 							"updates":[{
-							'firstName': document.getElementById("addn").value
+								'firstName': document.getElementById("addn").value,
+								'keyField': document.getElementById("keyfieldbox").value
 							}],
 							"deletes":{}
 						};
@@ -138,7 +139,7 @@
 			Key Field: <input type="text" name="keyfield" id="keyfieldbox" value="durian"><br>
 			First Name: <input type="text" name="firstn" id="first" value="pomegranate"><br>
 			Last Name: <input type="text" name="lastn" id="last" value="pineapple"> <br>
-			Add Name: <input type="text" name="addd" id="addn" value="lychee"> <br>
+			Delta KeyField: <input type="text" name="addd" id="addn" value="bananananaa"> <br>
 		</form>
     </body>
 </html> 

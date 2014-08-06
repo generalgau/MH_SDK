@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <script type="text/javascript" src="scripts/jquery-2.0.2.js"></script>
+        <script type="text/javascript" src="scripts/helix-mobile-full.js"></script>
+        <link rel="stylesheet" type="text/css" href="styles/helix-mobile-full.css">
+    </head>
+    <body>
+		<div id="chat">Messages:<br><br></div>
+        <script type="text/javascript">
+		initHelixDB();
+		definePersistenceMigrations();
+		Helix.DB.initPersistence();
+		var schemaa
+		$(document).on('hxPersistenceReady', function () {
+				var s = {
+				'messageID':'',
+				'To':'',
+				'From':'',
+				'Time':'',
+				'Message': ''
+				};
+				schemaa = Helix.DB.prepareSchemaTemplate(s, "messageTable", "messageID", {}, {});
+				console.log(schemaa);
+				Helix.DB.generatePersistenceSchema(schemaa, "INF0", function () {
+					persistence.dump(function (dump) {
+						console.log(dump);
+					});
+				});
+			});
+		var m
+		function send() {
+			var m = {
+				'messageID':document.getElementById('IDbox').value,
+				'To':'',
+				'From':'',
+				'Time':'',
+				'Message':document.getElementById('composebox').value
+			};
+			Helix.DB.synchronizeObject(m,
+			Helix.DB.getSchemaForTable("messageTable"),
+			function () {
+				//alert(JSON.stringify(m));
+			},
+			null, null, null);
+			print()
+		}
+		function print() {
+		var record;
+			Helix.DB.synchronizeObjectByKey(document.getElementById('IDbox').value, Helix.DB.getSchemaForTable("messageTable"), function (obj) {
+				record = obj["_data"];
+				$('#chat').append(JSON.stringify(record) + "<br />");
+			});
+		}
+        </script>
+		<form name="banana" action="" method="get">
+			<input type="button" name="sendd" value="SEND" onclick="send()"/>
+			<input type='button' name='printt' value='PRINT' onclick='print()'/><br>
+			<input type="text" name="compose" id="composebox" value="Send a message...">
+			<input type="text" name="messageID" id="IDbox" value="1">
+		</form>
+    </body>
+</html> 

@@ -21,16 +21,16 @@
 		<div id="login-form" class="input-group input-group-lg center-block" >
 			<br><input id="username" type="text" class="form-control" placeholder="username"></input>
 			<br><input id="password" type="password" class="form-control" placeholder="password"></input>
-			<Br><span class="input-group-btn form-group">
+			<br><span class="input-group-btn form-group">
 				<button id="login-btn" class="btn btn-default" type="button" onclick="logmein();">Log in</button>
 			</span>
 		</div>
 		
 		<div id="thechat" class="input-group input-group-lg center-block" >
 			<pre id="chatwindow" class="pre-scrollable">loading messages...</pre>
-			<input type="text" class="form-control" placeholder="your message..."></input>
+			<input type="text" class="form-control" placeholder="your message..." id="messagebox"></input>
 			<span class="input-group-btn">
-				<button id="send" class="btn btn-default" type="button">Send</button>
+				<button id="send" class="btn btn-default" type="button" onclick='send()'>Send</button>
 			</span>
 		</div>
 		</div>
@@ -41,44 +41,51 @@
 		definePersistenceMigrations();
 		Helix.DB.initPersistence();
 		
+		var stateBananager = {
+			thread_id: null,
+			user: null
+		};
+		
 		$(document).on('hxPersistenceReady', function () {
-				$("#thechat").hide();
-				$("#login-form").show();
-				
-				var s = {
-					messageID:'',
-					To:'',
-					From:'',
-					Time:'',
-					Message: ''
-				};
-				
-				var schemaa = Helix.DB.prepareSchemaTemplate(s, "messageTable", "messageID");
-				console.log(schemaa);
-				
-				var thread = {
-					threadID:'',
-					messages: schemaa
-				};
-				
-				var threadTable = Helix.DB.prepareSchemaTemplate(thread, "threadTable", "threadID");
-				console.log(threadTable);
-				
-				Helix.DB.generatePersistenceSchema(threadTable, "threadSchema", function () {
-					persistence.dump(function (dump) {
-						console.log(dump);
-					});
+			$("#thechat").hide();
+			$("#login-form").show();
+							
+			var r = {
+					created: '',
+					message: '',
+					message_id:  '',
+					msg_from: '',
+					msg_to: ''
+			};
+			
+			var schemaa = Helix.DB.prepareSchemaTemplate(r, "messageTable", "message_id");
+			console.log(schemaa);
+			
+			var thread = {
+				//Thread: {
+					thread_id: '',
+				//},
+				Message: schemaa
+			};
+			
+			var schema2 = Helix.DB.prepareSchemaTemplate(thread, "threadTable", "thread_id");
+			console.log(schema2);
+			
+			Helix.DB.generatePersistenceSchema(schema2, "threadSchema", function () {
+				persistence.dump(function (dump) {
+					console.log(dump);
 				});
-				/*
-				//Nik: what exactly are you synchronizing here??
-				Helix.DB.synchronizeObject(thread,Helix.DB.getSchemaForTable("threadTable"),function() {
-					console.log(thread);
-					},null,null,null
-				);
-				*/
-				
-				logmein();
 			});
+			/*
+			//Nik: what exactly are you synchronizing here??
+			Helix.DB.synchronizeObject(thread,Helix.DB.getSchemaForTable("threadTable"),function() {
+				console.log(thread);
+				},null,null,null
+			);
+			*/
+			
+			logmein();
+		});
 			
 		var m
 
@@ -95,6 +102,7 @@
 				//alert('that worked');
 				window.d3 = $.parseJSON(data);
 				var d = $.parseJSON(data);
+				
 				if (d.success === true )
 					getThreads();
 				else{
@@ -112,9 +120,11 @@
 						//alert('that worked');
 						window.d3 = $.parseJSON(data);
 						var d = $.parseJSON(data);
-						if (d.success === true )
+						if (d.success === true ) {
 							getThreads();
-						else
+							stateBananager.user = d.payload;
+						}
+						else 
 							$("#login-form").show();
 					  },
 					  error: function(data){
@@ -156,49 +166,72 @@
 		function getMessages() {
 			$("#thechat").show();
 			$.ajax({
-				  //type: "POST",
-				  dataType: 'jsonp',
-				  url: 'http://link-sdkdemo1.rhcloud.com/threads/view',
-				  data: {
-					  thread_id: 2
-				  },
-				  success: function(data){
+				 //type: "POST",
+				 dataType: 'jsonp',
+				 url: 'http://link-sdkdemo1.rhcloud.com/threads/view',
+				 data: {
+					thread_id: 2
+				},
+				success: function(data){
 				    
 					//alert('that worked');
 					window.d3 = $.parseJSON(data);
 					var d = $.parseJSON(data);
-				  }
+				}
 				});	  
 			
 		
 		}
 
 		function send() {
-			m = {
-				'messageID':document.getElementById('IDbox').value,
-				'To':'',
-				'From':'',
-				'Time':'',
-				'Message':document.getElementById('composebox').value
-			};
-			Helix.DB.synchronizeObject(m,
-				Helix.DB.getSchemaForTable("messageTable"),
-				function () {
-					//alert(JSON.stringify(m));
+			var m = {
+				Thread: {
+					thread_id: 2
 				},
-				null, null, null
-			);
-			print();
+				Message:{
+					//created: '',
+					message: document.getElementById('messagebox').value,
+					//message_id:  4,
+					msg_from: stateBananager.user,
+					msg_to: ''
+				}
+			};
+			$.ajax({
+				 //type: "POST",
+				 dataType: 'jsonp',
+				 url: 'http://link-sdkdemo1.rhcloud.com/messages/add',
+				 data: m,
+				success: function(data){
+					print();
+					//alert('that worked');
+					window.d3 = $.parseJSON(data);
+					var d = $.parseJSON(data);
+				}
+			});	  
+			
+
 		}
 
 
 		function print() {
 		var record;
-			Helix.DB.synchronizeObjectByKey(document.getElementById('IDbox').value, Helix.DB.getSchemaForTable("messageTable"), function (obj) {
-				record = obj["_data"];
-				$('#chat').append(JSON.stringify(record) + "<br />");
+			Helix.DB.synchronizeObjectByKey(2/*document.getElementById('IDbox').value*/, Helix.DB.getSchemaForTable("threadTable"), function (obj) {
+				record = obj.Message;
+				$('#chatwindow').append(JSON.stringify(record) + "<br />");
+				var m = {
+					thread_id: 2,
+					Message: JSON.stringify(record)
+				};
+				Helix.DB.synchronizeObject(m,
+					Helix.DB.getSchemaForTable("threadTable"),
+					function () {
+						//alert(JSON.stringify(m));
+					},
+					null, null, null
+				);
 			});
 		}
+		
 		function delta() {
 			Helix.DB.generatePersistenceSchema({
 			__hx_schema_name: 'threadTable',

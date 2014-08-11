@@ -1,48 +1,178 @@
-<html>
-    <head>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
         <script type="text/javascript" src="scripts/jquery-2.0.2.js"></script>
         <script type="text/javascript" src="scripts/helix-mobile-full.js"></script>
-        <link rel="stylesheet" type="text/css" href="styles/helix-mobile-full.css">
+		<script type="text/javascript" src="scripts/bootstrap-3.2.0-dist/js/bootstrap.js"></script>
+		<link rel="stylesheet" type="text/css" href="styles/helix-mobile-full.css">
+		<link rel="stylesheet" type="text/css" href="styles/bootstrap-3.2.0-dist/css/bootstrap.min.css" >
+		<link rel="stylesheet" type="text/css" href="styles/chat.css" >
+		
     </head>
     <body>
-		<div id="chat">Messages:<br><br></div>
-        <script type="text/javascript">
+		<div id="chat"><h3>Messages:<br><br>
+		
+		
+		<div id="login-form" class="input-group input-group-lg center-block" >
+			<br><input id="username" type="text" class="form-control" placeholder="username"></input>
+			<br><input id="password" type="password" class="form-control" placeholder="password"></input>
+			<Br><span class="input-group-btn form-group">
+				<button id="login-btn" class="btn btn-default" type="button" onclick="logmein();">Log in</button>
+			</span>
+		</div>
+		
+		<div id="thechat" class="input-group input-group-lg center-block" >
+			<pre id="chatwindow" class="pre-scrollable">loading messages...</pre>
+			<input type="text" class="form-control" placeholder="your message..."></input>
+			<span class="input-group-btn">
+				<button id="send" class="btn btn-default" type="button">Send</button>
+			</span>
+		</div>
+		</div>
+		
+		
+		<script type="text/javascript">
 		initHelixDB();
 		definePersistenceMigrations();
 		Helix.DB.initPersistence();
 		
 		$(document).on('hxPersistenceReady', function () {
+				$("#thechat").hide();
+				$("#login-form").show();
+				
 				var s = {
-				messageID:'',
-				To:'',
-				From:'',
-				Time:'',
-				Message: ''
+					messageID:'',
+					To:'',
+					From:'',
+					Time:'',
+					Message: ''
 				};
 				
 				var schemaa = Helix.DB.prepareSchemaTemplate(s, "messageTable", "messageID");
 				console.log(schemaa);
 				
 				var thread = {
-				threadCount:1,
-				messages: schemaa
+					threadID:'',
+					messages: schemaa
 				};
 				
-				var threadTable = Helix.DB.prepareSchemaTemplate(thread, "threadTable", "threadCount");
+				var threadTable = Helix.DB.prepareSchemaTemplate(thread, "threadTable", "threadID");
 				console.log(threadTable);
+				
 				Helix.DB.generatePersistenceSchema(threadTable, "threadSchema", function () {
 					persistence.dump(function (dump) {
 						console.log(dump);
 					});
 				});
-				
+				/*
+				//Nik: what exactly are you synchronizing here??
 				Helix.DB.synchronizeObject(thread,Helix.DB.getSchemaForTable("threadTable"),function() {
 					console.log(thread);
 					},null,null,null
 				);
+				*/
+				
+				logmein();
 			});
 			
 		var m
+
+		
+		function logmein() {
+			$("#login-form").hide();
+			$.ajax({
+			  //type: "POST",
+			  dataType: 'jsonp',
+			  url: 'http://link-sdkdemo1.rhcloud.com/users/loggedin',
+			  data: {
+			  },
+			  success: function(data){
+				//alert('that worked');
+				window.d3 = $.parseJSON(data);
+				var d = $.parseJSON(data);
+				if (d.success === true )
+					getThreads();
+				else{
+					$.ajax({
+					  //type: "POST",
+					  dataType: 'jsonp',
+					  url: 'http://link-sdkdemo1.rhcloud.com/users/login',
+					  data: {
+						User: {
+						  username: $("#username").val(),
+						  password: $("#password").val(),				  
+						}
+					  },
+					  success: function(data){
+						//alert('that worked');
+						window.d3 = $.parseJSON(data);
+						var d = $.parseJSON(data);
+						if (d.success === true )
+							getThreads();
+						else
+							$("#login-form").show();
+					  },
+					  error: function(data){
+						console.log(data);
+						$("#login-form").show();
+					  }
+					});
+				
+				}
+					
+			  },
+			  error: function(data){
+				console.log(data);
+				$("#login-form").show();
+			  }
+			});
+
+
+		}
+		
+		function getThreads() {
+			$("#thechat").show();
+			$.ajax({
+				  //type: "POST",
+				  dataType: 'jsonp',
+				  url: 'http://link-sdkdemo1.rhcloud.com/threads/index',
+				  data: "",
+				  success: function(data){
+				    
+					//alert('that worked');
+					window.d3 = $.parseJSON(data);
+					var d = $.parseJSON(data);
+				  }
+				});	  
+			
+		
+		}
+
+		function getMessages() {
+			$("#thechat").show();
+			$.ajax({
+				  //type: "POST",
+				  dataType: 'jsonp',
+				  url: 'http://link-sdkdemo1.rhcloud.com/threads/view',
+				  data: {
+					  thread_id: 2
+				  },
+				  success: function(data){
+				    
+					//alert('that worked');
+					window.d3 = $.parseJSON(data);
+					var d = $.parseJSON(data);
+				  }
+				});	  
+			
+		
+		}
+
 		function send() {
 			m = {
 				'messageID':document.getElementById('IDbox').value,
@@ -52,13 +182,16 @@
 				'Message':document.getElementById('composebox').value
 			};
 			Helix.DB.synchronizeObject(m,
-			Helix.DB.getSchemaForTable("messageTable"),
-			function () {
-				//alert(JSON.stringify(m));
-			},
-			null, null, null);
+				Helix.DB.getSchemaForTable("messageTable"),
+				function () {
+					//alert(JSON.stringify(m));
+				},
+				null, null, null
+			);
 			print();
 		}
+
+
 		function print() {
 		var record;
 			Helix.DB.synchronizeObjectByKey(document.getElementById('IDbox').value, Helix.DB.getSchemaForTable("messageTable"), function (obj) {
@@ -93,13 +226,6 @@
 			})
 		}
         </script>
-		<form name="banana" action="" method="get">
-			<input type="button" name="sendd" value="SEND" onclick="send()"/>
-			<input type="button" name="deltaa" value="DELTA" onclick="delta();"/>
-			<input type='button' name='printt' value='PRINT' onclick='print()'/><br>
-			<input type="text" name="composee" id="composebox" value="Send a message...">
-			<input type="text" name="deltaaa" id="deltabox" value="New message"/>
-			<input type="text" name="messageIDD" id="IDbox" value="1">
-		</form>
+		
     </body>
 </html> 

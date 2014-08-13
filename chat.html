@@ -9,34 +9,48 @@
         <script type="text/javascript" src="scripts/jquery-2.0.2.js"></script>
         <script type="text/javascript" src="scripts/helix-mobile-full.js"></script>
 		<script type="text/javascript" src="scripts/bootstrap-3.2.0-dist/js/bootstrap.js"></script>
-		<link rel="stylesheet" type="text/css" href="styles/helix-mobile-full.css">
-		<link rel="stylesheet" type="text/css" href="styles/bootstrap-3.2.0-dist/css/bootstrap.min.css" >
-		<link rel="stylesheet" type="text/css" href="styles/chat.css" >
-		
+		<link rel="stylesheet" type="text/css" href="styles/helix-mobile-full.css"/>
+		<link rel="stylesheet" type="text/css" href="styles/bootstrap-3.2.0-dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" href="styles/chat.css" />
+
     </head>
     <body>
-		<div id="chat"><h3>Messages:<br><br>
-		
-		
-		<div id="login-form" class="input-group input-group-lg center-block" >
-			<br><input id="username" type="text" class="form-control" placeholder="username"></input>
-			<br><input id="password" type="password" class="form-control" placeholder="password"></input>
-			<br><span class="input-group-btn form-group">
-				<button id="login-btn" class="btn btn-default" type="button" onclick="logmein();">Log in</button>
-			</span>
+		<div style="background-image: url('images/helix.jpg');height:100vh;background-size: 100%;">
+			<br><br>
+			<div class="form-horizontal" id="login-form" role="form">
+				<div style="width:1200px;height:250px;-webkit-border-radius: 50px;-moz-border-radius: 50px;border-radius: 50px;border:7px solid #384056;background-color:#495472;-webkit-box-shadow: #919191 14px 14px 14px;-moz-box-shadow: #919191 14px 14px 14px; box-shadow: #919191 14px 14px 14px;"> 
+					<br><div class="form-group form-group-lg">
+						<label for="username" class="col-sm-1 control-label"></label>
+						<div class="col-sm-10">
+						  <input type="text" id="username" class="form-control" placeholder="username"></input>
+						</div>
+					</div>
+					<div class="form-group form-group-lg">
+						<label for="password" class="col-sm-1 control-label"></label>
+						<div class="col-sm-10">
+						  <input type="password" id="password" class="form-control" placeholder="password"></input>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-1 col-sm-10">
+						  <button type="login-btn" class="btn btn-warning btn-lg" onclick="logmein();">Log in</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div id="thechat" class="input-group input-group-lg center-block" >
+				<pre id="chatwindow" class="pre-scrollable">loading messages...</pre>
+				<input type="text" class="form-control" placeholder="your message..." id="messagebox"></input>
+				<br><br><span class="input-group-btn">
+					<button id="send" class="btn btn-success" type="button" onclick='send()'>Send</button>
+				</span>
+			</div>
+			
 		</div>
-		
-		<div id="thechat" class="input-group input-group-lg center-block" >
-			<pre id="chatwindow" class="pre-scrollable">loading messages...</pre>
-			<input type="text" class="form-control" placeholder="your message..." id="messagebox"></input>
-			<span class="input-group-btn">
-				<button id="send" class="btn btn-default" type="button" onclick='send()'>Send</button>
-			</span>
-		</div>
-		</div>
-		
-		
+
 		<script type="text/javascript">
+
 		initHelixDB();
 		definePersistenceMigrations();
 		Helix.DB.initPersistence();

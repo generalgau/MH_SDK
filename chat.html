@@ -7,15 +7,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
         <script type="text/javascript" src="scripts/jquery-2.0.2.js"></script>
+		<script src="//code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.js"></script>
         <script type="text/javascript" src="scripts/helix-mobile-full.js"></script>
 		<script type="text/javascript" src="scripts/bootstrap-3.2.0-dist/js/bootstrap.js"></script>
 		<link rel="stylesheet" type="text/css" href="styles/helix-mobile-full.css"/>
+		<link rel="stylesheet" href="//code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.css">
 		<link rel="stylesheet" type="text/css" href="styles/bootstrap-3.2.0-dist/css/bootstrap.min.css" />
 		<link rel="stylesheet" type="text/css" href="styles/chat.css" />
 
     </head>
     <body>
-		<div style="background-image: url('images/helix.jpg');height:100vh;background-size: 100%;">
+		<div >
 			<br><br>
 			<div class="form-horizontal" id="login-form" role="form">
 				<div style="width:1200px;height:250px;-webkit-border-radius: 50px;-moz-border-radius: 50px;border-radius: 50px;border:7px solid #384056;background-color:#495472;-webkit-box-shadow: #919191 14px 14px 14px;-moz-box-shadow: #919191 14px 14px 14px; box-shadow: #919191 14px 14px 14px;"> 
@@ -38,9 +40,34 @@
 					</div>
 				</div>
 			</div>
+
+			<div data-role="page" id="threads4">
+				<div data-role="header">
+					<h1>Mobile Helix Chat Demo</h1>
+				</div>
 			
-			<div id="thechat" class="input-group input-group-lg center-block" >
-				<pre id="chatwindow" class="pre-scrollable">loading messages...</pre>
+			<div data-role="page" id="threads1">
+				<div data-role="header">
+					<h1>Chat Threads</h1>
+				</div>
+				<div id="threads" class="ui-content" >
+				  <ul data-role="listview" id="thread_list">
+					<li>loading conversation threads...</li>
+				  </ul>
+				</div>
+			</div>
+			<div id="thechat" data-role="page" >
+				<br><br><span class="input-group-btn">
+					<button id="backtothreads" class="btn btn-success" type="button" onclick='backToThreads();'>Back to Chat Thread list</button>
+				</span>
+				<div data-role="header">
+					<h1>Chat Screen</h1>
+				</div>
+				<div id="messages" class="ui-content" >
+				  <ul data-role="listview" id="message_list">
+					<li>loading messages...</li>
+				  </ul>
+				</div>
 				<input type="text" class="form-control" placeholder="your message..." id="messagebox"></input>
 				<br><br><span class="input-group-btn">
 					<button id="send" class="btn btn-success" type="button" onclick='send()'>Send</button>
@@ -55,49 +82,45 @@
 		definePersistenceMigrations();
 		Helix.DB.initPersistence();
 		
-		var stateBananager = {
+		var stateManager = {
 			thread_id: null,
-			user: null
+			user: null,
+			msg_to: null
 		};
 		
 		$(document).on('hxPersistenceReady', function () {
 			$("#thechat").hide();
+			$("#threads1").hide();
 			$("#login-form").show();
-							
-			var r = {
-					created: '',
-					message: '',
-					message_id:  '',
+				
+			var chatthread = {
+				__hx_schema_name: "chat",
+				__hx_key : "thread_id",
+				created: '',
+				modified: '',
+				messages: {
+					__hx_schema_name: "messages",
+					__hx_key: "message_id",
+					msg_to: '',
 					msg_from: '',
-					msg_to: ''
+					message: '',
+					created: ''
+				}
 			};
-			
-			var schemaa = Helix.DB.prepareSchemaTemplate(r, "messageTable", "message_id");
-			console.log(schemaa);
-			
-			var thread = {
-				//Thread: {
-					thread_id: '',
-				//},
-				Message: schemaa
-			};
-			
-			var schema2 = Helix.DB.prepareSchemaTemplate(thread, "threadTable", "thread_id");
-			console.log(schema2);
-			
-			Helix.DB.generatePersistenceSchema(schema2, "threadSchema", function () {
+				
+			Helix.DB.generatePersistenceSchema(chatthread, "chatSchema", function () {
 				persistence.dump(function (dump) {
 					console.log(dump);
 				});
 			});
-			/*
+			
 			//Nik: what exactly are you synchronizing here??
+			/*
 			Helix.DB.synchronizeObject(thread,Helix.DB.getSchemaForTable("threadTable"),function() {
 				console.log(thread);
 				},null,null,null
 			);
 			*/
-			
 			logmein();
 		});
 			
@@ -116,6 +139,7 @@
 				//alert('that worked');
 				window.d3 = $.parseJSON(data);
 				var d = $.parseJSON(data);
+				stateManager.user = d.payload;
 				
 				if (d.success === true )
 					getThreads();
@@ -135,8 +159,9 @@
 						window.d3 = $.parseJSON(data);
 						var d = $.parseJSON(data);
 						if (d.success === true ) {
+							stateManager.user = d.payload;
 							getThreads();
-							stateBananager.user = d.payload;
+							
 						}
 						else 
 							$("#login-form").show();
@@ -160,7 +185,7 @@
 		}
 		
 		function getThreads() {
-			$("#thechat").show();
+			$("#threads1").show();
 			$.ajax({
 				  //type: "POST",
 				  dataType: 'jsonp',
@@ -171,43 +196,86 @@
 					//alert('that worked');
 					window.d3 = $.parseJSON(data);
 					var d = $.parseJSON(data);
+					if (d.message === "thread data"){
+						var index, listdata="";
+						for (index = 0; index < d.payload.length; index++){
+							// get the other party
+							var other;
+							if (d.payload[index].Thread.thread_user1 === stateManager.user )
+								other = d.payload[index].Thread.thread_user2;
+							else
+								d.payload[index].Thread.thread_user1;
+							listdata+= "<li onclick='getMessages( " + d.payload[index].Thread.thread_id + " );'><a href'#'><h2>" + other +  "</h2></a></li>" ;
+						}
+						$("#thread_list").html( listdata );
+						$("#thread_list").listview().listview('refresh');
+					}
+					var c = Helix.DB.getSchemaForTable("chat");
+					/*
+					Helix.DB.synchronizeObject(d.payload[0], c, function() {
+						console.log(thread);
+						},null,null,null
+					);
+				    */
+					$(".ui-icon-loading").hide();
 				  }
 				});	  
 			
 		
 		}
 
-		function getMessages() {
-			$("#thechat").show();
+		function getMessages( thread_id ) {
+			stateManager.thread_id = thread_id;
+			$("#threads1").hide( function() {
+				$("#thechat").show();
+			});
+			$(".ui-icon-loading").show();
 			$.ajax({
 				 //type: "POST",
 				 dataType: 'jsonp',
-				 url: 'http://link-sdkdemo1.rhcloud.com/threads/view',
+				 url: 'http://link-sdkdemo1.rhcloud.com/threads/view/',
 				 data: {
-					thread_id: 2
+					thread_id: thread_id
 				},
 				success: function(data){
 				    
 					//alert('that worked');
 					window.d3 = $.parseJSON(data);
 					var d = $.parseJSON(data);
+					if (d.message === "thread data"){
+						var index, messagedata="";
+						if ( d.payload.Message.length > 0){						
+							var other;
+							if (d.payload.Thread.thread_user1 === stateManager.user )
+								other = d.payload.Thread.thread_user2;
+							else
+								d.payload.Thread.thread_user1;
+							stateManager.msg_to = other;
+							for (index = 0; index < d.payload.Message.length; index++){
+								messagedata+= "<li>"
+								// msg is from?
+								messagedata+= "<img src='images/" + d.payload.Message[index].msg_from + ".jpg' />";
+								messagedata+= d.payload.Message[index].created + ":&nbsp;&nbsp;&nbsp; <b> " +  d.payload.Message[index].message + "</b></li>" ;
+							}
+						} else	
+							messagedata+="<li>no messages</li>";
+						$("#message_list").html( messagedata );
+						$("#message_list").listview().listview('refresh');
+					}
+					$(".ui-icon-loading").hide();
 				}
 				});	  
 			
 		
 		}
 
-		function send() {
+		function send( ) {
 			var m = {
-				Thread: {
-					thread_id: 2
-				},
 				Message:{
-					//created: '',
+					thread_id: stateManager.thread_id,
 					message: document.getElementById('messagebox').value,
-					//message_id:  4,
-					msg_from: stateBananager.user,
-					msg_to: ''
+					msg_from: stateManager.user,
+					msg_to: stateManager.msg_to
 				}
 			};
 			$.ajax({
@@ -216,10 +284,12 @@
 				 url: 'http://link-sdkdemo1.rhcloud.com/messages/add',
 				 data: m,
 				success: function(data){
-					print();
+					$("#messagebox").val("");
+					//print();
 					//alert('that worked');
 					window.d3 = $.parseJSON(data);
 					var d = $.parseJSON(data);
+					getMessages( stateManager.thread_id );
 				}
 			});	  
 			
@@ -272,6 +342,16 @@
 				print();
 			})
 		}
+		
+		function backToThreads(){
+			$("#thechat").hide( function() {
+				getThreads();
+			});
+			
+		}
+		
+		
+		
         </script>
 		
     </body>
